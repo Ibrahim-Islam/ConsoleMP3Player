@@ -10,22 +10,15 @@ namespace CmdPlayer
 {
     public class Player
     {
-        /// <summary>
-        /// Gets the current active file
-        /// </summary>
-        private FileInfo _currentFile;
-        public FileInfo CurrentFile
-        {
-            get { return _currentFile; }
-            private set
-            {
-                _currentFile = value;
-                _currentFileFullName = value == null ? null : value.FullName;
-            }
-        }
 
         public event EventHandler PlaybackComplete;
+        
+        public FileInfo CurrentFile
+        {
+            get { return _playlist.ElementAt(_currentFileIndex); }
+        }
 
+        
         #region Private
 
         [DllImport("winmm.dll")]
@@ -33,8 +26,8 @@ namespace CmdPlayer
 
         IEnumerable<FileInfo> _playlist;
 
-        string _currentFileFullName;
-
+        int _currentFileIndex;
+        
         Timer _timer;
 
         void Send(string mciCommand)
@@ -45,32 +38,29 @@ namespace CmdPlayer
         int GetMediaLength()
         {
             StringBuilder returnData = new StringBuilder(128);
-            var Pcommand = "status " + _currentFileFullName + " length";
+            var Pcommand = "status " + CurrentFile.FullName + " length";
             var error = mciSendString(Pcommand, returnData, returnData.Capacity, IntPtr.Zero);
             return int.Parse(returnData.ToString());
         }
 
         #endregion
 
-
-        /// <summary>
-        /// Initializes player with current dir files as the playlist
-        /// </summary>
-        /// <param name="Playlist">Playlist for the player</param>
+        
         public Player(IEnumerable<FileInfo> Playlist)
         {
-            Console.WriteLine("Inside ctor");
             _playlist = Playlist;
         }
 
 
         public string Play()
         {
-            if (CurrentFile == null) CurrentFile = _playlist.FirstOrDefault();
+            if (_playlist.Count() == 0) return "No file to play";
+
+            //if (CurrentFile == null) CurrentFile = _playlist.FirstOrDefault();
 
             if (CurrentFile != null)
             {
-                Send("open " + _currentFileFullName);
+                Send("open " + CurrentFile.FullName);
 
                 var length = GetMediaLength();
 
@@ -83,7 +73,7 @@ namespace CmdPlayer
                 _timer.Enabled = true;
                 _timer.Start();
 
-                Send("play " + _currentFileFullName);
+                Send("play " + CurrentFile.FullName);
 
                 return "Playing " + CurrentFile.Name;
             }
@@ -105,92 +95,57 @@ namespace CmdPlayer
 
         public string Pause()
         {
-            if (CurrentFile != null)
-            {
-                Send("pause " + _currentFileFullName);
-                return "Paused " + CurrentFile.Name;
-            }
-
-            return "No file to pause";
+            Send("pause " + CurrentFile.FullName);
+            return "Paused " + CurrentFile.Name;
         }
 
 
         public string Resume()
         {
-            if (CurrentFile != null)
-            {
-                Send("resume " + _currentFileFullName);
-                return "Resume " + CurrentFile.Name;
-            }
-
-            return "No file to resume";
+            Send("resume " + CurrentFile.FullName);
+            return "Resume " + CurrentFile.Name;
         }
 
 
         public string Stop()
         {
-            if (CurrentFile != null)
-            {
-                Send("close " + _currentFileFullName);
-                var stoppedFileName = CurrentFile.Name.ToString();
-                CurrentFile = null;
-                return "Stopped " + stoppedFileName;
-            }
-
-            return "No file to stop";
+            Send("close " + CurrentFile.FullName);
+            var stoppedFileName = CurrentFile.Name.ToString();
+            return "Stopped " + stoppedFileName;
         }
 
 
         public string Next()
         {
-            if (CurrentFile != null)
+            _currentFileIndex = _currentFileIndex + 1;
+            var nextFile = _playlist.ElementAtOrDefault(_currentFileIndex);
+
+            if (nextFile == null)
             {
-                var nextFile = _playlist
-                        .SkipWhile(f => f.FullName != CurrentFile.FullName)
-                        .Skip(1)
-                        .Take(1)
-                        .SingleOrDefault();
-
-                if (nextFile == null)
-                {
-                    return "This is the last file";
-                }
-                else
-                {
-                    Stop();
-                    CurrentFile = nextFile;
-                    return Play(); 
-                }
+                return "This is the last file";
             }
-
-            return "Start playing first";
+            else
+            {
+                Stop();
+                return Play(); 
+            }
         }
 
 
         public string Previous()
         {
-            if (CurrentFile != null)
+            _currentFileIndex = _currentFileIndex - 1;
+            var previousFile = _playlist.ElementAtOrDefault(_currentFileIndex);
+
+            if (previousFile == null)
             {
-                var previousFile = _playlist
-                                    .Reverse()
-                                    .SkipWhile(f => f.FullName != CurrentFile.FullName)
-                                    .Skip(1)
-                                    .Take(1)
-                                    .SingleOrDefault();
-
-                if (previousFile == null)
-                {
-                    return "This is the first file";
-                }
-                else
-                {
-                    Stop();
-                    CurrentFile = previousFile;
-                    return Play();
-                }
+                return "This is the first file";
             }
-
-            return "Start playing first";
+            else
+            {
+                Stop();
+                return Play();
+            }
         }
     }
 }

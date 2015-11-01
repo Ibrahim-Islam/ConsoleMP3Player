@@ -72,7 +72,7 @@ namespace CmdPlayer
 
         private static void Player_PlaybackComplete(object sender, EventArgs e)
         {
-            //WriteLine(player.Next());
+            WriteLine(player.Next());
         }
     }
 }
