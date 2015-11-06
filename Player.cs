@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using WMPLib;
 
-namespace CmdPlayer
+namespace ConsoleMP3Player
 {
     public class Player
     {

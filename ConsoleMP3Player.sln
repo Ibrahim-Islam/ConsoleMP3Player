@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CmdPlayer", "CmdPlayer.csproj", "{8EF5BCAF-5AF2-435D-921B-BEB6DCDC7B7A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleMP3Player", "ConsoleMP3Player.csproj", "{8EF5BCAF-5AF2-435D-921B-BEB6DCDC7B7A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

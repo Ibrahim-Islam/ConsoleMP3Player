@@ -4,7 +4,7 @@ using System.Linq;
 using System.IO;
 using static System.Console;
 
-namespace CmdPlayer
+namespace ConsoleMP3Player
 {
     class Program
     {
