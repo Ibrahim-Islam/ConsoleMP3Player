@@ -2,150 +2,90 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Timers;
+using WMPLib;
 
 namespace CmdPlayer
 {
     public class Player
     {
+        public delegate void StatusChangedDelegate(string status);
 
-        public event EventHandler PlaybackComplete;
+        public event StatusChangedDelegate StatusChanged;
+
+
+        WindowsMediaPlayer _player;        
+        double _currentPosition;
+        IWMPPlaylist playlist;
         
-        public FileInfo CurrentFile
-        {
-            get { return _playlist.ElementAt(_currentFileIndex); }
-        }
 
-        
-        #region Private
-
-        [DllImport("winmm.dll")]
-        static extern int mciSendString(string mciCommand, StringBuilder buffer, int bufferSize, IntPtr callback);
-
-        IEnumerable<FileInfo> _playlist;
-
-        int _currentFileIndex;
-        
-        Timer _timer;
-
-        void Send(string mciCommand)
-        {
-            mciSendString(mciCommand, null, 0, IntPtr.Zero);
-        }
-
-        int GetMediaLength()
-        {
-            StringBuilder returnData = new StringBuilder(128);
-            var Pcommand = "status " + CurrentFile.FullName + " length";
-            var error = mciSendString(Pcommand, returnData, returnData.Capacity, IntPtr.Zero);
-            return int.Parse(returnData.ToString());
-        }
-
-        #endregion
-
-        
         public Player(IEnumerable<FileInfo> Playlist)
         {
-            _playlist = Playlist;
+            _player = new WindowsMediaPlayer();
+            playlist = _player.playlistCollection.newPlaylist("myplaylist");
+            foreach (var file in Playlist)
+            {
+                var media = _player.newMedia(file.FullName);
+                playlist.appendItem(media);
+            }
+            _player.currentPlaylist = playlist;
+            _player.controls.stop();
+            _player.PlayStateChange += _player_PlayStateChange;
         }
 
-
-        public string Play()
+        private void _player_PlayStateChange(int NewState)
         {
-            if (_playlist.Count() == 0) return "No file to play";
-
-            //if (CurrentFile == null) CurrentFile = _playlist.FirstOrDefault();
-
-            if (CurrentFile != null)
+            switch (NewState)
             {
-                Send("open " + CurrentFile.FullName);
+                case 1:
+                    StatusChanged("Stopped " + _player.currentMedia.name + ".mp3");
+                break;
 
-                var length = GetMediaLength();
+                case 2:
+                    StatusChanged("Paused " + _player.currentMedia.name + ".mp3");
+                break;
 
-                if (_timer == null)
-                    _timer = new Timer(length);
-                else
-                    _timer.Interval = length;
-
-                _timer.Elapsed += _timer_Elapsed;
-                _timer.Enabled = true;
-                _timer.Start();
-
-                Send("play " + CurrentFile.FullName);
-
-                return "Playing " + CurrentFile.Name;
-            }
-            else
-            {
-                return "No file to play";
+                case 3:
+                    StatusChanged("Playing " + _player.currentMedia.name + ".mp3");
+                break;
             }
         }
+        
 
-
-        private void _timer_Elapsed(object sender, ElapsedEventArgs e)
+        public void Play()
         {
-            _timer.Elapsed -= _timer_Elapsed;
-            _timer.Enabled = false;
-            _timer.Stop();
-            if (PlaybackComplete != null) PlaybackComplete(sender, e);
+            _player.controls.play();
+        }
+        
+        
+        public void Pause()
+        {
+            _currentPosition = _player.controls.currentPosition;
+            _player.controls.pause();
         }
 
 
-        public string Pause()
+        public void Resume()
         {
-            Send("pause " + CurrentFile.FullName);
-            return "Paused " + CurrentFile.Name;
+            _player.controls.currentPosition = _currentPosition;
+            _player.controls.play();
         }
 
 
-        public string Resume()
+        public void Stop()
         {
-            Send("resume " + CurrentFile.FullName);
-            return "Resume " + CurrentFile.Name;
+            _player.controls.stop();
         }
 
 
-        public string Stop()
+        public void Next()
         {
-            Send("close " + CurrentFile.FullName);
-            var stoppedFileName = CurrentFile.Name.ToString();
-            return "Stopped " + stoppedFileName;
+            _player.controls.next();
         }
 
 
-        public string Next()
+        public void Previous()
         {
-            _currentFileIndex = _currentFileIndex + 1;
-            var nextFile = _playlist.ElementAtOrDefault(_currentFileIndex);
-
-            if (nextFile == null)
-            {
-                return "This is the last file";
-            }
-            else
-            {
-                Stop();
-                return Play(); 
-            }
-        }
-
-
-        public string Previous()
-        {
-            _currentFileIndex = _currentFileIndex - 1;
-            var previousFile = _playlist.ElementAtOrDefault(_currentFileIndex);
-
-            if (previousFile == null)
-            {
-                return "This is the first file";
-            }
-            else
-            {
-                Stop();
-                return Play();
-            }
+            _player.controls.previous();
         }
     }
 }

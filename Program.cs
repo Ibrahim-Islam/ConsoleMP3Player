@@ -1,10 +1,8 @@
-﻿using static System.Console;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Runtime.InteropServices;
 using System.IO;
+using static System.Console;
 
 namespace CmdPlayer
 {
@@ -26,7 +24,7 @@ namespace CmdPlayer
             try
             {
                 player = new Player(currentDirMp3s);
-                player.PlaybackComplete += Player_PlaybackComplete;
+                player.StatusChanged += Player_StatusChange;
 
                 while (true)
                 {
@@ -38,28 +36,28 @@ namespace CmdPlayer
                             return;
 
                         case "play":
-                            WriteLine(player.Play());
+                            player.Play();
                         break;
 
                         case "stop":
-                            WriteLine(player.Stop());
-                        break;
+                            player.Stop();
+                            break;
 
                         case "pause":
-                            WriteLine(player.Pause());
-                        break;
+                            player.Pause();
+                            break;
 
                         case "next":
-                            WriteLine(player.Next());
-                        break;
+                            player.Next();
+                            break;
 
                         case "previous":
-                            WriteLine(player.Previous());
-                        break;
+                            player.Previous();
+                            break;
 
                         case "resume":
-                            WriteLine(player.Resume());
-                        break;
+                            player.Resume();
+                            break;
                     }
                     
                 }
@@ -70,9 +68,9 @@ namespace CmdPlayer
             }
         }
 
-        private static void Player_PlaybackComplete(object sender, EventArgs e)
+        private static void Player_StatusChange(string status)
         {
-            WriteLine(player.Next());
+            WriteLine(status);
         }
     }
 }
