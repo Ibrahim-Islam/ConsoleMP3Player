@@ -63,14 +63,7 @@ namespace ConsoleMP3Player
             _player.controls.pause();
         }
 
-
-        public void Resume()
-        {
-            _player.controls.currentPosition = _currentPosition;
-            _player.controls.play();
-        }
-
-
+        
         public void Stop()
         {
             _player.controls.stop();

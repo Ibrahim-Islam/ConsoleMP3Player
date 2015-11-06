@@ -54,10 +54,6 @@ namespace ConsoleMP3Player
                         case "previous":
                             player.Previous();
                             break;
-
-                        case "resume":
-                            player.Resume();
-                            break;
                     }
                     
                 }
