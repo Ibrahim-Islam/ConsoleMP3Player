@@ -26,18 +26,15 @@ namespace ConsoleMP3Player
                 player = new Player(currentDirMp3s);
                 player.StatusChanged += Player_StatusChange;
 
+                WriteLine(string.Format("Available commands are play, pause, stop, next and previous"));
+
                 while (true)
                 {
-                    var read = ReadLine().ToLower();
-
-                    switch (read)
+                    switch (ReadLine().ToLower())
                     {
-                        case "exit":
-                            return;
-
                         case "play":
                             player.Play();
-                        break;
+                            break;
 
                         case "stop":
                             player.Stop();
@@ -54,8 +51,11 @@ namespace ConsoleMP3Player
                         case "previous":
                             player.Previous();
                             break;
-                    }
-                    
+
+                        default:
+                            WriteLine("Command not recognized");
+                            break;
+                    }                    
                 }
             }
             catch (Exception ex)
