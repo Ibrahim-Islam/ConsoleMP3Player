@@ -8,8 +8,6 @@ namespace ConsoleMP3Player
 {
     class Program
     {
-        static Player player;
-
         public static IEnumerable<FileInfo> currentDirMp3s
         {
             get {
@@ -23,7 +21,7 @@ namespace ConsoleMP3Player
         {
             try
             {
-                player = new Player(currentDirMp3s);
+                var player = new Player(currentDirMp3s);
                 player.StatusChanged += Player_StatusChange;
 
                 WriteLine(string.Format("Available commands are play, pause, stop, next and previous"));
